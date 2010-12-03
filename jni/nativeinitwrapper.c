@@ -19,6 +19,19 @@ int createProcess(int *ppid)
 	pid_t pid;
 	int res;
 
+	char *const argv[] = {
+		"su",
+		"-c",
+		"libinit.so",
+		"/native",
+		NULL
+	};
+
+	char *const envp[] = {
+		"PATH=/system/bin:/data/data/org.androix.nativenetbook/lib",
+		NULL
+	};
+
 	ptm = open("/dev/ptmx", O_RDWR);
 	fcntl(ptm, F_SETFD, FD_CLOEXEC);
 
@@ -42,13 +55,15 @@ int createProcess(int *ppid)
 		dup2(pts, 0);
 		dup2(pts, 1);
 		dup2(pts, 2);
-		//execl("./init", "./init", "/native", NULL);
+		execl("/data/data/org.androix.nativenetbook/lib/init.so", "./init", "/native", NULL);
 		//res = execve("/system/bin/su", "su");
 		//res = execve("/bin/su", "su");
 
 		printf("in child\n");
-		execlp("ls", "ls", "/", NULL);
+		//execlp("ls", "ls", "/", NULL);
 		//execl("su", "-c", "./init", "/native", NULL);
+		execve("/system/bin/su", argv, envp);
+		execve("/bin/su", argv, envp);
 
 		exit(-1);
 	};
