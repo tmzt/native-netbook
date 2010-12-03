@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="Title">File Downloader</string>
+    <string name="app_name">FileDownloader</string>
+    <string name="progress_text">Downloading...</string>
+</resources>
