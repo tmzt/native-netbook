@@ -9,6 +9,8 @@ public class NativeInit
 		System.loadLibrary("nativeinitwrapper");
 	}
 
+	public static native void chmod(String filename, int mode);
+
 	public static native FileDescriptor createProcess(
 		int[] processId);
 

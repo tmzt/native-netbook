@@ -1,26 +1,19 @@
 package org.androix.nativenetbook;
 
+import java.lang.Thread;
+
 import android.app.Activity;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+import android.widget.TextView;
 
 public class NetbookActivity extends Activity
 {
 
-    private int[] pidArray = new int[1];
-
-    private FileDescriptor nativeFd;	
-    private FileInputStream nativeIn;
-
-    private byte[] buffer = new byte[256];
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -28,19 +21,15 @@ public class NetbookActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-	nativeFd = NativeInit.createProcess(pidArray);
-	nativeIn = new FileInputStream(nativeFd);
+        final Intent intent = new Intent(this, NetbookService.class);
+        startService(intent);
 
-	buffer[0] = 'X';
-	buffer[1] = 'Y';
-	buffer[2] = 'Z';
-
-/*	while(true) {	*/
-		try { 
-			int read = nativeIn.read(buffer);
-		} catch (IOException io) {};
-		Log.d("NativeNetbook", new String(buffer));
-/*	}	*/
+        TextView systemText = (TextView)findViewById(R.id.systemText);
+        systemText.setText("Native Netbook started");
 
     }
+
 }
+
+
+

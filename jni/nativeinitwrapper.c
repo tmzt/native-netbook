@@ -12,6 +12,14 @@
 #include <unistd.h>
 #include <termios.h>
 
+#include "android/log.h"
+
+#define LOG_TAG "NativeNetbook"
+//define LOG(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define LOG(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+
+
+
 int createProcess(int *ppid)
 {
 	char *devname;
@@ -19,16 +27,18 @@ int createProcess(int *ppid)
 	pid_t pid;
 	int res;
 
+	LOG("createProcess");
+
 	char *const argv[] = {
 		"su",
 		"-c",
-		"libinit.so",
-		"/native",
+		"/data/data/org.androix.nativenetbook/nativeinit /native",
 		NULL
 	};
 
 	char *const envp[] = {
-		"PATH=/system/bin:/data/data/org.androix.nativenetbook/lib",
+		/*"PATH=/system/bin:/data/data/org.androix.nativenetbook",*/
+        "DISPLAY=:0",
 		NULL
 	};
 
@@ -45,6 +55,7 @@ int createProcess(int *ppid)
 
 	if (pid) {
 		*ppid = pid;
+        LOG("[native] parent returning");
 		return ptm;
 	} else {
 		/* child */
@@ -55,19 +66,35 @@ int createProcess(int *ppid)
 		dup2(pts, 0);
 		dup2(pts, 1);
 		dup2(pts, 2);
-		execl("/data/data/org.androix.nativenetbook/lib/init.so", "./init", "/native", NULL);
+		//execl("/data/data/org.androix.nativenetbook/lib/init.so", "./init", "/native", NULL);
 		//res = execve("/system/bin/su", "su");
 		//res = execve("/bin/su", "su");
 
 		printf("in child\n");
 		//execlp("ls", "ls", "/", NULL);
 		//execl("su", "-c", "./init", "/native", NULL);
-		execve("/system/bin/su", argv, envp);
-		execve("/bin/su", argv, envp);
+		//execve("/system/bin/su", argv, envp);
+		//execve("/bin/su", argv, envp);
 
+//        execlp("su", "su", "-c", "/data/data/org.androix.nativenetbook/nativeinit /native", NULL);
+//        execlp("su", "su", "-c", "ls /native", NULL);
+
+        execve("/system/bin/su", argv, envp);
+        execve("/system/xbin/su", argv, envp);
+        execve("/bin/su", argv, envp);
+
+        LOG("[native] child exiting this should not happen");
 		exit(-1);
 	};
 };
+
+void Java_org_androix_nativenetbook_NativeInit_chmod(JNIEnv *env, jobject cls, jobject filename, jint mode)
+{
+	char *fn = NULL;
+
+	fn = (char *)((*env)->GetStringUTFChars(env, filename, 0));
+	chmod(fn, mode);
+}
 
 jobject Java_org_androix_nativenetbook_NativeInit_createProcess(JNIEnv *env, jobject cls, jintArray pidArray)
 {
@@ -82,6 +109,8 @@ jobject Java_org_androix_nativenetbook_NativeInit_createProcess(JNIEnv *env, job
 	jfieldID FileDescriptor_descriptor;
 
 	jobject filedescriptor;	
+
+	LOG("[native] createProcess");
 
 	FileDescriptor_class = (*env)->FindClass(env, "java/io/FileDescriptor");
 	FileDescriptor_descriptor = (*env)->GetFieldID(env, FileDescriptor_class, "descriptor", "I");
