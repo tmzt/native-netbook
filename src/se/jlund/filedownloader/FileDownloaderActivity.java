@@ -8,6 +8,9 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.Toast;
 
 public class FileDownloaderActivity extends Activity {
@@ -16,44 +19,32 @@ public class FileDownloaderActivity extends Activity {
     private static final int DIALOG_PROGRESS = 1;
 
     private static final int MAX_PROGRESS = 100;
-
-    //private TextView m_progressText;
     private ProgressDialog mProgressDialog;
-    // private Handler mProgressHandler;
-    //private int mProgress;
 
-    // TEST
-    private final String url = "http://download.thinkbroadband.com/1MB.zip";
+    // TEST URL
+    private final String url = "http://download.thinkbroadband.com/10MB.zip";
 
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-
-        //m_progressText = (TextView) findViewById(R.id.progresstext);
-
+    private void launchDownload() {
         DownloadFilesTask task = new DownloadFilesTask();
         task.execute(url);
 
         showDialog(DIALOG_PROGRESS);
-        /*
-        mProgressHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                if (mProgress >= MAX_PROGRESS) {
-                    mProgressDialog.dismiss();
-                } else {
-                    mProgress++;
-                    mProgressDialog.incrementProgressBy(1);
-                    mProgressHandler.sendEmptyMessageDelayed(0, 100);
-                }
-            }
-        };
-        mProgressHandler.sendEmptyMessage(0);
-         */
+    }
+    
+    
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);               
 
+        Button b = (Button) findViewById(R.id.download_button);
+        b.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                launchDownload();
+            }
+        });
+        launchDownload();
     }
 
     @Override
@@ -66,7 +57,8 @@ public class FileDownloaderActivity extends Activity {
             mProgressDialog.setTitle(R.string.progress_text);
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             mProgressDialog.setMax(MAX_PROGRESS);
-            mProgressDialog.setProgress(0); // remove?
+            mProgressDialog.setProgress(0); 
+            mProgressDialog.setCancelable(false);
             break;
         default:
             assert false;
@@ -76,7 +68,7 @@ public class FileDownloaderActivity extends Activity {
 
     private class DownloadFilesTask extends AsyncTask<String, Integer, Long> {
         Downloader downloader;
-        long downloadedBytes = 0;
+        long downloadedTotal = 0;
 
         protected Long doInBackground(String... urls) {
             int count = urls.length;
@@ -94,7 +86,9 @@ public class FileDownloaderActivity extends Activity {
                 // TODO: Handle this failure appropriately...
             }
 
-            Log.i(TAG, "Total size = " + downloader.getTotalSize());
+            final long totalSize = downloader.getTotalSize();
+            
+            Log.i(TAG, "Total size = " + totalSize);
 
             try {
                 Thread.sleep(3000);
@@ -104,21 +98,23 @@ public class FileDownloaderActivity extends Activity {
             }
 
             // Do the download
-            downloadedBytes = 0;
             try {
+                long downloadedTmp = 0;
                 do {
-                    try {
-                        downloadedBytes += downloader.downloadFile();
+                    try {                       
+                        
+                        downloadedTmp = downloader.downloadFile();
+                        if (downloadedTmp > 0)
+                            downloadedTotal += downloadedTmp;
                     } catch (IOException e) {
                         Toast.makeText(FileDownloaderActivity.this, 
-                                "Error downloading file!", Toast.LENGTH_LONG);
+                                "Error downloading file!", Toast.LENGTH_LONG).show();
                         // TODO: Handle this failure appropriately...
                     }
 
-                    // Not optimized to call downloader.getTotalSize(), but leave for now
-                    int progress = (int) ((downloadedBytes / downloader.getTotalSize()) * 100);
+                    int progress = (int) ((downloadedTotal / (double)totalSize) * 100);
 
-                    Log.i(TAG, "Downloaded " + downloadedBytes/1024.0 + " kB, i.e. " + downloadedBytes);
+                    Log.i(TAG, "Downloaded " + downloadedTotal/1024.0 + " kB, i.e. " + downloadedTotal);
 
                     Log.i(TAG, "Progress = " + progress);
 
@@ -126,13 +122,13 @@ public class FileDownloaderActivity extends Activity {
                     publishProgress(progress);
 
                 }
-                while (downloadedBytes > 0);
+                while (downloadedTmp > 0);
             }
             finally {
                 downloader.cleanup();
             }
 
-            return downloadedBytes;
+            return downloadedTotal;
         }
 
         protected void onProgressUpdate(Integer... progress) {
@@ -142,7 +138,7 @@ public class FileDownloaderActivity extends Activity {
 
         protected void onPostExecute(Long result) {
             dismissDialog(DIALOG_PROGRESS);
-            Toast.makeText(FileDownloaderActivity.this, "Download finished!", Toast.LENGTH_LONG);
+            Toast.makeText(getBaseContext(), "Download finished!", Toast.LENGTH_LONG).show();
         }
     }
 
