@@ -68,7 +68,7 @@ public class FileDownloaderActivity extends Activity {
 
     private class DownloadFilesTask extends AsyncTask<String, Integer, Long> {
         Downloader downloader;
-        long downloadedTotal = 0;
+        long downloadedTotal = 0;        
 
         protected Long doInBackground(String... urls) {
             int count = urls.length;
@@ -81,22 +81,20 @@ public class FileDownloaderActivity extends Activity {
                 downloader = new Downloader(url);
             } catch (IOException e) {
                 Log.e(TAG, e.toString());
-                Toast.makeText(FileDownloaderActivity.this, 
-                        "Could not download " + url, Toast.LENGTH_LONG).show();
+                Runnable error = new Runnable() {
+                    public void run() {
+                        Toast.makeText(FileDownloaderActivity.this, 
+                                "Could not download " + url, Toast.LENGTH_SHORT).show();                        
+                    }
+                };
+                runOnUiThread(error);
                 // TODO: Handle this failure appropriately...
             }
 
             final long totalSize = downloader.getTotalSize();
             
             Log.i(TAG, "Total size = " + totalSize);
-
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-
+            
             // Do the download
             try {
                 long downloadedTmp = 0;
@@ -107,9 +105,13 @@ public class FileDownloaderActivity extends Activity {
                         if (downloadedTmp > 0)
                             downloadedTotal += downloadedTmp;
                     } catch (IOException e) {
-                        Toast.makeText(FileDownloaderActivity.this, 
-                                "Error downloading file!", Toast.LENGTH_LONG).show();
-                        // TODO: Handle this failure appropriately...
+                        Runnable error = new Runnable() {
+                            public void run() {
+                                Toast.makeText(FileDownloaderActivity.this, 
+                                        "Error downloading file!", Toast.LENGTH_SHORT).show();
+                            }
+                        };
+                        runOnUiThread(error);
                     }
 
                     int progress = (int) ((downloadedTotal / (double)totalSize) * 100);
@@ -118,7 +120,6 @@ public class FileDownloaderActivity extends Activity {
 
                     Log.i(TAG, "Progress = " + progress);
 
-                    if (progress == 0) progress = 1; // Show that we have started...
                     publishProgress(progress);
 
                 }
@@ -138,7 +139,7 @@ public class FileDownloaderActivity extends Activity {
 
         protected void onPostExecute(Long result) {
             dismissDialog(DIALOG_PROGRESS);
-            Toast.makeText(getBaseContext(), "Download finished!", Toast.LENGTH_LONG).show();
+            Toast.makeText(FileDownloaderActivity.this, "Download finished!", Toast.LENGTH_SHORT).show();
         }
     }
 

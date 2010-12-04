@@ -17,19 +17,12 @@
     android:text="Progress"
     />
 
-<LinearLayout android:orientation="horizontal"
-android:layout_width="fill_parent"
-android:layout_height="wrap_content"
->
+
 <Button
 	android:id="@+id/download_button"
 	android:layout_width="wrap_content"
 	android:layout_height="wrap_content"
 	android:text="Download" />
-<Button
-	android:layout_width="wrap_content"
-	android:layout_height="wrap_content"
-	android:text="Cancel" />
-</LinearLayout>
+
 
 </LinearLayout>

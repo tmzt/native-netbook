@@ -12,8 +12,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import android.os.Environment;
-
 /**
  * 
  * @author Jan Lund <janne_lund@yahoo.com>
@@ -26,7 +24,9 @@ public class Downloader {
 
     // Class constants
     private static final int BUF_SZ = 100 * 1024;
-    private static final File DIRECTORY = Environment.getExternalStorageDirectory();
+    //private static final File DIRECTORY = Environment.getExternalStorageDirectory();
+    private static final File DIRECTORY = 
+        new File("/data/data/" + Downloader.class.getPackage().getName() + "/");
 
     // Instance variables
     private InputStream in = null;
